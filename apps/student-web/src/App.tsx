@@ -409,6 +409,17 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
         { id: 'bhindi', name: 'Bhindi Masala', desc: 'Stir-fried okra with spices', price: 25, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, hasPortion: true },
       ]
     },
+    {
+      label: 'Dals',
+      key: 'dal',
+      items: [
+        { id: 'dal-fry', name: 'Dal Fry', desc: 'Yellow lentils tempered with garlic & cumin', price: 15, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: '⭐ Classic' },
+        { id: 'dal-makhani', name: 'Dal Makhani', desc: 'Slow-cooked black lentils with cream', price: 25, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: '🔥 Popular' },
+        { id: 'dal-tadka', name: 'Dal Tadka', desc: 'Arhar dal with red chilli tadka', price: 15, img: IMG('chhole_masala_1776971292524.png'), veg: true },
+        { id: 'rajma', name: 'Rajma', desc: 'Red kidney beans in thick gravy', price: 20, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: '🍛 Hearty' },
+        { id: 'panchmel', name: 'Panchmel Dal', desc: 'Traditional five-lentil mix', price: 20, img: IMG('chhole_masala_1776971292524.png'), veg: true },
+      ]
+    },
   ],
   SNACKS: [
     {
@@ -441,10 +452,23 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
 // Dinner mirrors Lunch
 MENU_CATALOGUE.DINNER = MENU_CATALOGUE.LUNCH
 
-// Price for Roti & Rice carbs (Lunch & Dinner only)
 const CARB_PRICES: Record<string, number> = {
   '1': 5, '2': 10, '3': 15, '4': 20, '5': 25, '6': 30, '7': 35, '8': 40,
   'Plain Rice': 10, 'Jeera Rice': 15, 'No Rice': 0,
+}
+
+function getDalForDay(dateStr: string, type: string): string {
+  const day = new Date(`${dateStr}T00:00:00`).getDay() // 0=Sun, 1=Mon...
+  const schedule: Record<number, { LUNCH: string, DINNER: string }> = {
+    1: { LUNCH: 'dal-fry', DINNER: 'dal-makhani' }, // Using IDs from catalogue
+    2: { LUNCH: 'dal-tadka', DINNER: 'panchmel' },
+    3: { LUNCH: 'dal-fry', DINNER: 'rajma' },
+    4: { LUNCH: 'dal-makhani', DINNER: 'dal-tadka' },
+    5: { LUNCH: 'panchmel', DINNER: 'dal-fry' },
+    6: { LUNCH: 'rajma', DINNER: 'panchmel' },
+    0: { LUNCH: 'dal-fry', DINNER: 'dal-makhani' }
+  }
+  return schedule[day]?.[type as 'LUNCH' | 'DINNER'] || 'dal-fry'
 }
 function isoDateNow() {
   const d = new Date()
@@ -592,7 +616,8 @@ export default function App() {
   const [toasts, setToasts] = useState<{ id: number, message: string, type: 'success' | 'error' }[]>([])
   const [tempDefaultMenu, setTempDefaultMenu] = useState<Record<string, any>>({
     rotiCount: { id: '2', portion: 'FULL' },
-    rice: { id: 'Plain Rice', portion: 'FULL' }
+    rice: { id: 'Plain Rice', portion: 'FULL' },
+    dal: { id: 'dal-fry', portion: 'FULL' }
   })
   const [reviewingOrderId, setReviewingOrderId] = useState<string | null>(null)
   const [detailInfo, setDetailInfo] = useState<{ title: string; content: React.ReactNode } | null>(null)
@@ -1315,21 +1340,34 @@ export default function App() {
                   )}
                 </div>
 
-                {/* Dynamic Menu Sections */}
                 <div style={{ marginBottom: '100px' }}>
-                  {sections.map(section => (
-                    <div key={section.key} style={{ marginBottom: '32px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 800 }}>{section.label}</h3>
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Choose 1</span>
+                  {sections.map(section => {
+                    let itemsToDisplay = section.items
+                    
+                    // Filter Dal section to show only scheduled item
+                    if (section.key === 'dal') {
+                      const scheduledId = getDalForDay(selectedDate, selectedMeal)
+                      itemsToDisplay = section.items.filter(i => i.id === scheduledId)
+                      // Fallback if ID doesn't match for some reason, show first
+                      if (itemsToDisplay.length === 0) itemsToDisplay = [section.items[0]]
+                    }
+
+                    return (
+                      <div key={section.key} style={{ marginBottom: '32px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                          <h3 style={{ fontSize: '18px', fontWeight: 800 }}>{section.label}</h3>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                            {section.key === 'dal' ? 'Today\'s Special' : 'Choose 1'}
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {itemsToDisplay.map(item => (
+                            <MenuItemCard key={item.id} item={item} sectionKey={section.key} />
+                          ))}
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        {section.items.map(item => (
-                          <MenuItemCard key={item.id} item={item} sectionKey={section.key} />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
 
                   {/* Carbs for Lunch/Dinner */}
                   {(selectedMeal === 'LUNCH' || selectedMeal === 'DINNER') && (
