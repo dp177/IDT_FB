@@ -16,7 +16,7 @@ const DetailModal = ({ title, content, onClose }: { title: string; content: Reac
   </div>
 )
 
-const ReviewModal = ({ orderId, onClose, onSubmit }: { orderId: string; onClose: () => void; onSubmit: (r: any) => void }) => {
+const ReviewModal = ({ onClose, onSubmit }: { onClose: () => void; onSubmit: (r: any) => void }) => {
   const [rating, setRating] = useState(5)
   const [taste, setTaste] = useState(5)
   const [hygiene, setHygiene] = useState(5)
@@ -93,6 +93,9 @@ interface OrderItem {
   tokenNo: string
   price: number
   isReviewed?: boolean
+  selections: Record<string, any>
+  portion: Portion
+  createdAt: string
 }
 
 interface OrderHistoryResponse {
@@ -157,7 +160,7 @@ const StoryModal = ({ stories, initialIndex, onClose }: { stories: string[]; ini
   )
 }
 
-const ReviewsPanel = ({ token, orders, onRate, comparison, allReviews }: { token: string; orders: OrderItem[]; onRate: (id: string) => void; comparison: any[]; allReviews: any[] }) => {
+const ReviewsPanel = ({ orders, onRate, comparison, allReviews, loadingComp }: { orders: OrderItem[]; onRate: (id: string) => void; comparison: any[]; allReviews: any[]; loadingComp: boolean }) => {
   const unreviewed = orders.filter(o => o.status === 'SERVED' && !o.isReviewed)
 
   return (
@@ -193,7 +196,7 @@ const ReviewsPanel = ({ token, orders, onRate, comparison, allReviews }: { token
                   </td>
                 </tr>
               ))}
-              {loadingComp && <tr><td colSpan={4}>Loading comparison data...</td></tr>}
+              {loadingComp && <tr><td colSpan={5}>Loading comparison data...</td></tr>}
             </tbody>
           </table>
         </div>
@@ -242,7 +245,7 @@ const ReviewsPanel = ({ token, orders, onRate, comparison, allReviews }: { token
   )
 }
 
-const LeaveRequestPanel = ({ token, onComplete }: { token: string; onComplete: () => void }) => {
+const LeaveRequestPanel = ({ token, onComplete, addToast }: { token: string; onComplete: () => void; addToast: (msg: string, type?: any) => void }) => {
   const tomorrow = addDays(isoDateNow(), 1)
   const [startDate, setStartDate] = useState(tomorrow)
   const [endDate, setEndDate] = useState(tomorrow)
@@ -476,6 +479,8 @@ export default function App() {
   const [student, setStudent] = useState<StudentMe | null>(null)
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [availability, setAvailability] = useState<AvailabilityOption[]>([])
+  const [, setOnboardingStep] = useState(1) 
+  const [loadingComp, setLoadingComp] = useState(false)
 
   const generateInsights = () => {
     if (!comparison.length) return ["🌟 Be the first to rate your mess and help others!"]
@@ -577,14 +582,13 @@ export default function App() {
 
   const [selectedDate, setSelectedDate] = useState(addDays(isoDateNow(), 1))
   const [selectedMeal, setSelectedMeal] = useState<MealType>('LUNCH')
-  const [selectedPortion, setSelectedPortion] = useState<Portion>('FULL')
+  const [selectedPortion] = useState<Portion>('FULL')
   const [selectedMess, setSelectedMess] = useState('')
   const [selections, setSelections] = useState<Record<string, { id: string, portion: Portion }>>({})
   const [activeNav, setActiveNav] = useState<NavSection>('home')
 
   const [isLoading, setIsLoading] = useState(false)
   const [isAvailabilityLoading, setIsAvailabilityLoading] = useState(false)
-  const [onboardingStep, setOnboardingStep] = useState(1) // 1: Dietary, 2: Default Menu
   const [toasts, setToasts] = useState<{ id: number, message: string, type: 'success' | 'error' }[]>([])
   const [tempDefaultMenu, setTempDefaultMenu] = useState<Record<string, any>>({
     rotiCount: { id: '2', portion: 'FULL' },
@@ -620,7 +624,6 @@ export default function App() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setIsLoading(true)
-    setError(null)
     try {
       const res = await apiRequest<{ accessToken?: string; token?: string }>('/auth/student/login', {
         method: 'POST',
@@ -662,10 +665,17 @@ export default function App() {
 
   useEffect(() => {
     if (!token) return
-    apiRequest<StudentMe>('/student/me', { token }).then(setStudent)
-    apiRequest<OrderHistoryResponse>('/student/orders/history', { token }).then(res => setOrders(res.orders))
-    apiRequest<any[]>('/student/reviews/all', { token }).then(setAllReviews)
-    apiRequest<any[]>('/student/reviews/comparison', { token }).then(setComparison)
+    setLoadingComp(true)
+    apiRequest<StudentMe>('/student/me', { token }).then(setStudent).catch(e => addToast(e.message, 'error'))
+    apiRequest<OrderHistoryResponse>('/student/orders/history', { token }).then(res => setOrders(res.orders)).catch(e => addToast(e.message, 'error'))
+    apiRequest<any[]>('/student/reviews/all', { token }).then(setAllReviews).catch(e => addToast(e.message, 'error'))
+    apiRequest<any[]>('/student/reviews/comparison', { token }).then(res => {
+      setComparison(res)
+      setLoadingComp(false)
+    }).catch(e => {
+      addToast(e.message, 'error')
+      setLoadingComp(false)
+    })
   }, [token])
 
   async function loadAvailability() {
@@ -676,7 +686,6 @@ export default function App() {
         `/student/messes/availability?mealDate=${selectedDate}&mealType=${selectedMeal}`,
         { token }
       )
-      console.log('Availability data:', data)
       setAvailability(data.options ?? [])
       if (data.options?.length > 0 && !data.options.some(o => o.messId === selectedMess)) {
         setSelectedMess(data.options[0].messId)
@@ -740,12 +749,12 @@ export default function App() {
   const handleReviewSubmit = async (orderId: string, data: any) => {
     try {
       await apiRequest(`/student/orders/${orderId}/review`, {
-        token, method: 'POST', body: data
+        token: token ?? undefined, method: 'POST', body: data
       })
       addToast('Review submitted! Thank you.', 'success')
       // Refresh
-      apiRequest<OrderHistoryResponse>('/student/orders/history', { token }).then(res => setOrders(res.orders))
-      apiRequest<any[]>('/student/reviews/comparison', { token }).then(setComparison)
+      apiRequest<OrderHistoryResponse>('/student/orders/history', { token: token ?? undefined }).then(res => setOrders(res.orders))
+      apiRequest<any[]>('/student/reviews/comparison', { token: token ?? undefined }).then(setComparison)
     } catch (err: any) { addToast(err.message, 'error') }
   }
 
@@ -915,6 +924,7 @@ export default function App() {
                         {['Plain Rice', 'Jeera Rice', 'No Rice'].map(r => <option key={r} value={r}>{r}</option>)}
                       </select>
                     </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1452,6 +1462,7 @@ export default function App() {
                       <th>Mess</th>
                       <th>Status</th>
                       <th>Token No</th>
+                      <th>Action</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1517,14 +1528,14 @@ export default function App() {
 
           {activeNav === 'reviews' && (
             <ReviewsPanel 
-              token={token} 
               orders={orders} 
               onRate={(id) => setReviewingOrderId(id)} 
               comparison={comparison}
               allReviews={allReviews}
+              loadingComp={loadingComp}
             />
           )}
-          {activeNav === 'leaves' && <LeaveRequestPanel token={token} onComplete={() => setActiveNav('home')} />}
+          {activeNav === 'leaves' && <LeaveRequestPanel token={token!} onComplete={() => setActiveNav('home')} addToast={addToast} />}
         </main>
       </div>
     </div>
@@ -1547,7 +1558,6 @@ export default function App() {
     )}
     {reviewingOrderId && (
       <ReviewModal 
-        orderId={reviewingOrderId} 
         onClose={() => setReviewingOrderId(null)} 
         onSubmit={(data) => {
           handleReviewSubmit(reviewingOrderId, data)
