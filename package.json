@@ -1,0 +1,16 @@
+{
+  "name": "optimess",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "services/*"
+  ],
+  "scripts": {
+    "dev:student": "npm run dev --workspace apps/student-web",
+    "dev:manager": "npm run dev --workspace apps/manager-web",
+    "dev:api": "npm run dev --workspace services/api",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces"
+  }
+}
