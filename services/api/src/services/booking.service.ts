@@ -239,6 +239,7 @@ export async function runDefaultAssignment(mealDate: string, mealType: MealType)
         if (defs.base) selections.base = defs.base
         if (defs.topup) selections.topup = defs.topup
         if (defs.dry) selections.dry = defs.dry
+        if (defs.dal) selections.dal = defs.dal
         if (defs.rotiCount) selections.rotiCount = defs.rotiCount
         if (defs.rice) selections.rice = defs.rice
       }

@@ -52,6 +52,7 @@ function formatDate(dateStr: string) {
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem(TOKEN_KEY))
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
@@ -66,7 +67,7 @@ export default function App() {
   const [detailedCounts, setDetailedCounts] = useState<Array<{ name: string, count: number }>>([])
   const [reviews, setReviews] = useState<Review[]>([])
   const [liveTokens, setLiveTokens] = useState<any[]>([])
-  
+
   const [rfid, setRfid] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,7 +84,7 @@ export default function App() {
       })
       const accessToken = res.accessToken ?? res.token
       if (!accessToken) throw new Error('Invalid credentials')
-      
+
       localStorage.setItem(TOKEN_KEY, accessToken)
       setToken(accessToken)
       setError(null)
@@ -104,7 +105,7 @@ export default function App() {
       ])
 
       const revForType = revenue.revenueByMealType.find((r: any) => r._id === mealType)?.amount || 0
-      
+
       setStats({
         totalOrders: headcount.totalOrders,
         servedCount: tokens.tokens.filter((t: any) => t.status === 'SERVED').length,
@@ -185,22 +186,37 @@ export default function App() {
 
   return (
     <div className="app-layout">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <h1 className="sidebar-logo">OptiManager</h1>
-          <p className="sidebar-subtitle">Central Mess Command</p>
-        </div>
-        <nav className="sidebar-nav">
-          <button className={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`} onClick={() => setActiveNav('dashboard')}>📊 Live Dashboard</button>
-          <button className={`nav-item ${activeNav === 'forecast' ? 'active' : ''}`} onClick={() => setActiveNav('forecast')}>📅 Requirement Forecast</button>
-          <button className={`nav-item ${activeNav === 'materials' ? 'active' : ''}`} onClick={() => setActiveNav('materials')}>📦 Kitchen Prep</button>
-          <button className={`nav-item ${activeNav === 'operations' ? 'active' : ''}`} onClick={() => setActiveNav('operations')}>⚡ Operations</button>
-          <button className={`nav-item ${activeNav === 'reviews' ? 'active' : ''}`} onClick={() => setActiveNav('reviews')}>⭐ Student Reviews</button>
-        </nav>
-        <button onClick={() => { localStorage.removeItem(TOKEN_KEY); setToken(null); }} className="logout-btn">Terminate Session</button>
-      </aside>
+      <header className="mobile-topbar">
+        <button className="mobile-menu-btn" onClick={() => setMobileSidebarOpen(true)} aria-label="Open navigation">
+          <span />
+          <span />
+          <span />
+        </button>
+        <h1 className="mobile-logo">OptiManager</h1>
+        <div className="mobile-avatar" aria-hidden="true">{(username || 'M').slice(0, 1).toUpperCase()}</div>
+      </header>
+      <div className={`sidebar-backdrop ${mobileSidebarOpen ? 'show' : ''}`} onClick={() => setMobileSidebarOpen(false)} />
+      <div className="workspace-shell">
+        <aside className={`sidebar ${mobileSidebarOpen ? 'open' : ''}`}>
+          <div className="sidebar-header">
+            <h1 className="sidebar-logo">OptiManager</h1>
+            <p className="sidebar-subtitle">Central Mess Command</p>
+          </div>
+          <nav className="sidebar-nav">
+            <button className={`nav-item ${activeNav === 'dashboard' ? 'active' : ''}`} onClick={() => { setActiveNav('dashboard'); setMobileSidebarOpen(false) }}>Live Dashboard</button>
+            <button className={`nav-item ${activeNav === 'forecast' ? 'active' : ''}`} onClick={() => { setActiveNav('forecast'); setMobileSidebarOpen(false) }}>Requirement Forecast</button>
+            <button className={`nav-item ${activeNav === 'materials' ? 'active' : ''}`} onClick={() => { setActiveNav('materials'); setMobileSidebarOpen(false) }}>Kitchen Prep</button>
+            <button className={`nav-item ${activeNav === 'operations' ? 'active' : ''}`} onClick={() => { setActiveNav('operations'); setMobileSidebarOpen(false) }}>Operations</button>
+            <button className={`nav-item ${activeNav === 'reviews' ? 'active' : ''}`} onClick={() => { setActiveNav('reviews'); setMobileSidebarOpen(false) }}>Student Reviews</button>
+          </nav>
+          <div className="sidebar-note">
+            <p>Kitchen Operations Suite</p>
+            <small>Professional workspace for meal service planning and monitoring.</small>
+          </div>
+          <button onClick={() => { localStorage.removeItem(TOKEN_KEY); setToken(null); }} className="logout-btn">Terminate Session</button>
+        </aside>
 
-      <main className="main-content">
+        <main className="main-content">
         <header className="top-bar">
           <div>
             <h2 style={{ fontSize: '24px', fontWeight: 900 }}>{activeNav.toUpperCase()}</h2>
@@ -243,9 +259,9 @@ export default function App() {
             </div>
 
             <section className="section">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+              <div className="dashboard-panels">
                 <div className="production-card">
-                  <h3 className="section-title">📦 Master Preparation List</h3>
+                  <h3 className="section-title">Master Preparation List</h3>
                   <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
                     <table>
                       <thead><tr><th>Menu Item</th><th>Total Needed</th></tr></thead>
@@ -285,14 +301,14 @@ export default function App() {
 
         {activeNav === 'forecast' && (
           <div className="forecast-view">
-            <h3 className="section-title">📅 Detailed Multi-Day Requirement Forecast</h3>
+            <h3 className="section-title">Detailed Multi-Day Requirement Forecast</h3>
             <div className="production-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))' }}>
               {forecast.map((f, i) => (
                 <div key={i} className="production-card" style={{ borderTop: '4px solid var(--primary)', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <strong style={{ fontSize: '18px' }}>{f._id.type}</strong>
-                      <span style={{ background: 'rgba(79, 70, 229, 0.2)', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 700 }}>{f.totalOrders} Pax</span>
+                      <span className="pill-badge">{f.totalOrders} Pax</span>
                     </div>
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>{formatDate(f._id.date)}</p>
                   </div>
@@ -317,8 +333,8 @@ export default function App() {
 
         {activeNav === 'materials' && (
           <div className="materials-view">
-            <h3 className="section-title">📦 Detailed Raw Material Requirements</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '32px' }}>
+            <h3 className="section-title">Detailed Raw Material Requirements</h3>
+            <div className="materials-layout">
               <div className="production-card">
                 <table>
                   <thead><tr><th>Ingredient</th><th>Required Quantity</th></tr></thead>
@@ -335,14 +351,14 @@ export default function App() {
               <div className="production-card" style={{ background: 'rgba(79, 70, 229, 0.05)', borderColor: 'var(--primary)' }}>
                 <h4 style={{ marginBottom: '16px' }}>Requirement Estimation Logic</h4>
                 <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                  Our system calculates weights based on confirmed bookings:<br/><br/>
-                  • <strong>Flour</strong>: Calculated per Roti (45g) and Paratha base.<br/>
-                  • <strong>Potatoes</strong>: Sourced for Samosas, Pav Bhaji, and Aloo-based mains.<br/>
-                  • <strong>Rice</strong>: Detailed for Biryani, Plain Rice, and Dosa batter.<br/>
+                  Our system calculates weights based on confirmed bookings:<br /><br />
+                  • <strong>Flour</strong>: Calculated per Roti (45g) and Paratha base.<br />
+                  • <strong>Potatoes</strong>: Sourced for Samosas, Pav Bhaji, and Aloo-based mains.<br />
+                  • <strong>Rice</strong>: Detailed for Biryani, Plain Rice, and Dosa batter.<br />
                   • <strong>Oil/Spices</strong>: Scaled based on total gravy portions.
                 </p>
                 <div style={{ marginTop: '24px', padding: '16px', background: 'var(--bg-app)', borderRadius: '8px', fontSize: '11px', color: 'var(--accent)' }}>
-                  ⚠️ <strong>Manager Tip</strong>: Always check 'Master Preparation List' for specific item counts.
+                  <strong>Manager Tip</strong>: Always check 'Master Preparation List' for specific item counts.
                 </div>
               </div>
             </div>
@@ -354,18 +370,18 @@ export default function App() {
             <div className="rfid-box">
               <h2 style={{ fontSize: '28px', fontWeight: 900 }}>Scan Student RFID</h2>
               <p style={{ opacity: 0.8, marginTop: '8px' }}>Validate token and verify meal selections</p>
-              <input 
-                type="text" 
-                value={rfid} 
-                onChange={e => setRfid(e.target.value)} 
+              <input
+                type="text"
+                value={rfid}
+                onChange={e => setRfid(e.target.value)}
                 onKeyPress={e => e.key === 'Enter' && handleServeRfid()}
-                placeholder="RFID T-ID..." 
-                className="rfid-input" 
-                autoFocus 
+                placeholder="RFID T-ID..."
+                className="rfid-input"
+                autoFocus
               />
-              <button 
-                onClick={handleServeRfid} 
-                style={{ marginTop: '24px', background: 'white', color: 'var(--primary)', padding: '12px 32px', borderRadius: '8px', fontWeight: 800 }}
+              <button
+                onClick={handleServeRfid}
+                className="serve-btn"
               >
                 Manual Serve
               </button>
@@ -387,7 +403,7 @@ export default function App() {
                       </div>
                     ))}
                   </div>
-                  <button onClick={() => setScannedOrder(null)} className="login-btn" style={{ background: '#334155' }}>Next Student</button>
+                  <button onClick={() => setScannedOrder(null)} className="login-btn secondary-btn">Next Student</button>
                 </div>
               ) : (
                 <div style={{ height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '2px dashed var(--border)', borderRadius: '12px' }}>
@@ -400,29 +416,29 @@ export default function App() {
 
         {activeNav === 'reviews' && (
           <div className="review-view">
-            <h3 className="section-title">⭐ Recent Student Feedback</h3>
+            <h3 className="section-title">Recent Student Feedback</h3>
             <div className="review-feed">
               {reviews.map(r => (
                 <div key={r._id} className="review-card">
                   <div className="review-meta">
                     <div>
                       <strong style={{ fontSize: '16px' }}>{r.studentId.fullName}</strong>
-                      <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{r.studentId.rollNo} • {formatDate(r.createdAt)}</p>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{r.studentId.rollNo} - {formatDate(r.createdAt)}</p>
                     </div>
-                    <div className="review-stars">{'★'.repeat(r.rating)}</div>
+                    <div className="review-stars">Rating: {r.rating}/5</div>
                   </div>
                   <div style={{ display: 'flex', gap: '24px', marginBottom: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px' }}>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>TASTE</p>
-                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>★{r.ratingTaste}</p>
+                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>{r.ratingTaste}/5</p>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>HYGIENE</p>
-                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>★{r.ratingHygiene}</p>
+                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>{r.ratingHygiene}/5</p>
                     </div>
                     <div style={{ textAlign: 'center' }}>
                       <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>SPEED</p>
-                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>★{r.ratingWaitTime}</p>
+                      <p style={{ fontWeight: 800, color: 'var(--accent)' }}>{r.ratingWaitTime}/5</p>
                     </div>
                   </div>
                   <p style={{ fontStyle: 'italic', color: 'var(--text-main)' }}>"{r.comment || 'No comment provided'}"</p>
@@ -433,6 +449,7 @@ export default function App() {
           </div>
         )}
       </main>
+      </div>
     </div>
   )
 }

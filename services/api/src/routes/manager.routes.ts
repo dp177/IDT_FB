@@ -14,6 +14,23 @@ const mealQuerySchema = z.object({
   mealType: z.enum(MEAL_TYPES),
 })
 
+const PORTION_SPLIT_KEYS = new Set(['base', 'topup', 'dry', 'dal', 'rice'])
+
+function getSelectionLabel(key: string, value: any) {
+  const itemId = typeof value === 'object' ? value.id : value
+  const portion = typeof value === 'object' ? value.portion : null
+
+  if (!itemId || itemId === 'No Rice') return null
+  if (key === 'rotiCount') return { label: 'ROTI_COUNT', roti: Number(itemId) }
+
+  if (PORTION_SPLIT_KEYS.has(key)) {
+    const normalizedPortion = portion === 'HALF' ? 'HALF' : 'FULL'
+    return { label: `${itemId} (${normalizedPortion})`, roti: 0 }
+  }
+
+  return { label: `${itemId}`, roti: 0 }
+}
+
 managerRouter.get('/dashboard/headcount', async (req, res) => {
   const mealDate = String(req.query.mealDate ?? todayIstDate())
   const mealType = String(req.query.mealType ?? 'LUNCH') as MealType
@@ -49,29 +66,26 @@ managerRouter.get('/production-plan', async (req, res) => {
   }
 
   // Aggregate every individual selection across all keys
-  const orders = await MealOrderModel.find({ 
-    mealDate: parsed.data.mealDate, 
-    mealType: parsed.data.mealType, 
-    status: { $in: ['BOOKED', 'DEFAULTED', 'SERVED'] } 
+  const orders = await MealOrderModel.find({
+    mealDate: parsed.data.mealDate,
+    mealType: parsed.data.mealType,
+    status: { $in: ['BOOKED', 'DEFAULTED', 'SERVED'] }
   })
 
   const detailedCounts: Record<string, number> = {}
   let totalRotis = 0
-  
+
   orders.forEach(order => {
-    order.selections.forEach((value: any, key: string) => {
-      const itemId = typeof value === 'object' ? value.id : value
-      const portion = typeof value === 'object' ? value.portion : null
-      
-      if (!itemId || itemId === 'No Rice') return
-      
-      if (key === 'rotiCount') {
-        totalRotis += Number(itemId)
+    order.selections?.forEach((value: any, key: string) => {
+      const parsed = getSelectionLabel(key, value)
+      if (!parsed) return
+
+      if (parsed.label === 'ROTI_COUNT') {
+        totalRotis += parsed.roti
         return
       }
-      
-      const compositeKey = portion && portion !== 'FULL' ? `${itemId} (${portion})` : `${itemId}`
-      detailedCounts[compositeKey] = (detailedCounts[compositeKey] || 0) + 1
+
+      detailedCounts[parsed.label] = (detailedCounts[parsed.label] || 0) + 1
     })
   })
 
@@ -170,17 +184,15 @@ managerRouter.get('/forecast', async (req, res) => {
 
     f.selections.forEach((sel: any) => {
       Object.entries(sel).forEach(([key, val]: [string, any]) => {
-        const id = typeof val === 'object' ? val.id : val
-        const portion = typeof val === 'object' ? val.portion : null
-        if (!id || id === 'No Rice') return
-        
-        if (key === 'rotiCount') {
-          totalRotis += Number(id)
+        const parsed = getSelectionLabel(key, val)
+        if (!parsed) return
+
+        if (parsed.label === 'ROTI_COUNT') {
+          totalRotis += parsed.roti
           return
         }
 
-        const compositeKey = portion && portion !== 'FULL' ? `${id} (${portion})` : `${id}`
-        counts[compositeKey] = (counts[compositeKey] || 0) + 1
+        counts[parsed.label] = (counts[parsed.label] || 0) + 1
       })
     })
 
@@ -203,8 +215,8 @@ managerRouter.get('/inventory/materials', async (req, res) => {
   const mealDate = String(req.query.mealDate ?? todayIstDate())
   const mealType = String(req.query.mealType ?? 'LUNCH') as MealType
 
-  const orders = await MealOrderModel.find({ 
-    mealDate, mealType, status: { $in: ['BOOKED', 'DEFAULTED', 'SERVED'] } 
+  const orders = await MealOrderModel.find({
+    mealDate, mealType, status: { $in: ['BOOKED', 'DEFAULTED', 'SERVED'] }
   })
 
   const rawMaterials: Record<string, { amount: number, unit: string }> = {
@@ -228,7 +240,7 @@ managerRouter.get('/inventory/materials', async (req, res) => {
     const isHalf = order.portion === 'HALF'
     const mult = isHalf ? 0.6 : 1
 
-    order.selections.forEach((value: any, key: string) => {
+    order.selections?.forEach((value: any, key: string) => {
       const id = typeof value === 'object' ? value.id : value
       if (!id) return
 
@@ -243,7 +255,7 @@ managerRouter.get('/inventory/materials', async (req, res) => {
       if (key === 'dal' || id === 'chhole' || id === '4-vada') rawMaterials['Dal/Lentils'].amount += 0.08 * mult
       if (id.includes('Egg') || id === 'omelette') rawMaterials['Eggs'].amount += 2
       if (id === '2-dosa' || id === '3-idli') rawMaterials['Basmati Rice'].amount += 0.12 * mult
-      
+
       // General estimates for gravies/snacks/dals
       if (['base', 'topup', 'dry', 'hot', 'dal'].includes(key)) {
         rawMaterials['Oil'].amount += 0.015 * mult
@@ -253,7 +265,7 @@ managerRouter.get('/inventory/materials', async (req, res) => {
         rawMaterials['Green Chillies'].amount += 0.005 * mult
         rawMaterials['Salt & Basic Spices'].amount += 0.008 * mult
       }
-      
+
       if (id.includes('tea') || id.includes('coffee') || id === 'shake' || id === 'dal-makhani') {
         rawMaterials['Milk/Cream'].amount += 0.15
       }
