@@ -16,19 +16,7 @@ const app = express()
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = new Set([
-        env.studentOrigin,
-        env.managerOrigin,
-        ...env.allowedOrigins,
-      ])
-
-      if (!origin || origin.match(/^http:\/\/localhost:\d+$/) || allowedOrigins.has(origin)) {
-        callback(null, true)
-      } else {
-        callback(new Error('Not allowed by CORS'))
-      }
-    },
+    origin: true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
