@@ -14,6 +14,7 @@ export const env = {
   port: Number(process.env.PORT ?? 4000),
   studentOrigin: getEnv('STUDENT_APP_ORIGIN', 'http://localhost:5173'),
   managerOrigin: getEnv('MANAGER_APP_ORIGIN', 'http://localhost:5174'),
+  allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',').map((origin) => origin.trim()).filter(Boolean) ?? [],
   mongoUri: getEnv('MONGODB_URI', 'mongodb://127.0.0.1:27017/optimess'),
   jwtSecret: getEnv('JWT_SECRET', 'optimess-dev-secret-change-me'),
   autoSeedDemo: process.env.AUTO_SEED_DEMO === 'true',

@@ -177,6 +177,42 @@ After API build:
 npm run start --workspace services/api
 ```
 
+## Deployment
+
+The cleanest production setup is:
+
+- Student frontend deployed to its own domain
+- Manager frontend deployed to its own domain
+- Shared API deployed separately with a public HTTPS URL
+- MongoDB hosted in Atlas or another managed MongoDB service
+
+### Required production env vars
+
+Set these on the API deployment:
+
+```env
+PORT=4000
+MONGODB_URI=<production-mongodb-uri>
+JWT_SECRET=<strong-random-secret>
+STUDENT_APP_ORIGIN=https://student.your-domain.com
+MANAGER_APP_ORIGIN=https://manager.your-domain.com
+ALLOWED_ORIGINS=https://student.your-domain.com,https://manager.your-domain.com
+AUTO_SEED_DEMO=false
+```
+
+Set this on each frontend deployment:
+
+```env
+VITE_API_BASE_URL=https://api.your-domain.com
+```
+
+### Deployment notes
+
+- Keep the API and frontends on HTTPS in production.
+- Make sure the API CORS allowlist matches the deployed frontend domains.
+- Disable demo seeding in production unless you explicitly need it for setup.
+- Rotate any development-only credentials before going live.
+
 ## Troubleshooting
 
 - Port already in use:

@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: optimess-api
+    env: node
+    rootDir: services/api
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    autoDeploy: true
+    plan: free
+    envVars:
+      - key: PORT
+        value: 4000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: STUDENT_APP_ORIGIN
+        sync: false
+      - key: MANAGER_APP_ORIGIN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: AUTO_SEED_DEMO
+        value: "false"
