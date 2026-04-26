@@ -173,13 +173,15 @@ button {
 
 /* Portal Shell */
 .portal-bg {
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background: var(--bg-app);
 }
 
 .portal-shell {
   display: flex;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -192,6 +194,8 @@ button {
   flex-direction: column;
   padding: 32px 16px;
   z-index: 10;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .brand-wrap {
@@ -267,6 +271,7 @@ button {
 .portal-main {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
   padding: 32px 48px;
   position: relative;
 }
@@ -907,6 +912,7 @@ td {
     z-index: 100;
     transform: translateX(-100%);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    overflow-y: auto;
   }
 
   .portal-sidebar.open {
