@@ -12,5 +12,8 @@
     "dev:api": "npm run dev --workspace services/api",
     "build": "npm run build --workspaces",
     "lint": "npm run lint --workspaces"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
   }
 }

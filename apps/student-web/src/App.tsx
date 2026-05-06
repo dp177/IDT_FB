@@ -321,7 +321,7 @@ const LeaveRequestPanel = ({ token, onComplete, addToast }: { token: string; onC
 const TOKEN_KEY = 'optimess.student.token'
 const MEAL_TYPES: MealType[] = ['BREAKFAST', 'LUNCH', 'SNACKS', 'DINNER']
 
-const IMG = (name: string) => `/food/${name}`
+const IMG = (name: string, folder: 'food' | 'new-food' = 'food') => `/${folder}/${encodeURIComponent(name)}`
 
 interface MenuItem {
   id: string
@@ -362,32 +362,32 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
         { id: 'paneer-paratha', name: 'Paneer Paratha', desc: 'Cottage cheese stuffed paratha with curd', price: 65, img: IMG('paneer_paratha_1776971188925.png'), veg: true, badge: 'Premium' },
         { id: 'poha', name: 'Poha', desc: 'Flattened rice with mustard, turmeric & peanuts', price: 30, img: IMG('poha_bowl_1776971204987.png'), veg: true, badge: 'Light' },
         { id: 'pav-bhaji', name: 'Pav Bhaji', desc: 'Spiced vegetable mash with buttered buns', price: 55, img: IMG('pav_bhaji_1776971226502.png'), veg: true, badge: 'Popular' },
-        { id: 'boiled-eggs', name: 'Boiled Eggs', desc: '2 protein-rich boiled eggs', price: 25, img: IMG('breakfast_menu_display_1776969595871.png'), veg: false, badge: 'High Protein' },
-        { id: 'omelette', name: 'Omelette', desc: 'Fluffy 2-egg omelette with veggies', price: 30, img: IMG('breakfast_menu_display_1776969595871.png'), veg: false },
+        { id: 'boiled-eggs', name: 'Boiled Eggs', desc: '2 protein-rich boiled eggs', price: 25, img: IMG('boiled-eggs.webp', 'new-food'), veg: false, badge: 'High Protein' },
+        { id: 'omelette', name: 'Omelette', desc: 'Fluffy 2-egg omelette with veggies', price: 30, img: IMG('omeletee.webp', 'new-food'), veg: false },
       ]
     },
     {
       label: 'Health Corner',
       key: 'health',
       items: [
-        { id: 'sprouts', name: 'Sprouts', desc: 'Mixed sprouts salad, healthy & fresh', price: 20, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true, badge: 'Healthy' },
+        { id: 'sprouts', name: 'Sprouts', desc: 'Mixed sprouts salad, healthy & fresh', price: 20, img: IMG('sprouts.webp', 'new-food'), veg: true, badge: 'Healthy' },
       ]
     },
     {
       label: 'Bakery',
       key: 'bakery',
       items: [
-        { id: 'bread-butter', name: 'Bread Butter', desc: '4 slices of toasted bread with Amul butter', price: 25, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true },
-        { id: 'bread-jam', name: 'Bread Jam', desc: '4 slices of bread with fruit jam', price: 25, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true },
+        { id: 'bread-butter', name: 'Bread Butter', desc: '4 slices of toasted bread with Amul butter', price: 25, img: IMG('bread-butter.webp', 'new-food'), veg: true },
+        { id: 'bread-jam', name: 'Bread Jam', desc: '4 slices of bread with fruit jam', price: 25, img: IMG('bread-jam.webp', 'new-food'), veg: true },
       ]
     },
     {
       label: 'Beverage',
       key: 'beverage',
       items: [
-        { id: 'b-tea', name: 'Tea', desc: 'Hot masala chai', price: 10, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true },
-        { id: 'b-coffee', name: 'Coffee', desc: 'Hot brewed coffee', price: 15, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true },
-        { id: 'b-bournvita', name: 'Bournvita', desc: 'Hot chocolate health drink', price: 20, img: IMG('breakfast_menu_display_1776969595871.png'), veg: true, badge: 'Health' },
+        { id: 'b-tea', name: 'Tea', desc: 'Hot masala chai', price: 10, img: IMG('tea.webp', 'new-food'), veg: true },
+        { id: 'b-coffee', name: 'Coffee', desc: 'Hot brewed coffee', price: 15, img: IMG('coffee.webp', 'new-food'), veg: true },
+        { id: 'b-bournvita', name: 'Bournvita', desc: 'Hot chocolate health drink', price: 20, img: IMG('bournvita.webp', 'new-food'), veg: true, badge: 'Health' },
       ]
     }
   ],
@@ -396,8 +396,8 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
       label: 'Base Gravy',
       key: 'base',
       items: [
-        { id: 'red-gravy', name: 'Red Gravy', desc: 'Rich tomato-onion base, medium spice', price: 15, img: IMG('paneer_gravy_1776971242349.png'), veg: true, badge: 'Classic', hasPortion: true },
-        { id: 'yellow-gravy', name: 'Yellow/White Gravy', desc: 'Creamy cashew-yogurt base, mild', price: 20, img: IMG('paneer_gravy_1776971242349.png'), veg: true, badge: 'Mild', hasPortion: true },
+        { id: 'red-gravy', name: 'Red Gravy', desc: 'Rich tomato-onion base, medium spice', price: 15, img: IMG('red-gravy.webp', 'new-food'), veg: true, badge: 'Classic', hasPortion: true },
+        { id: 'yellow-gravy', name: 'Yellow/White Gravy', desc: 'Creamy cashew-yogurt base, mild', price: 20, img: IMG('yellow-gravy.webp', 'new-food'), veg: true, badge: 'Mild', hasPortion: true },
       ]
     },
     {
@@ -414,22 +414,22 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
       label: 'Dry Curry',
       key: 'dry',
       items: [
-        { id: 'aloo-fry', name: 'Aloo Fry', desc: 'Crispy stir-fried potatoes', price: 15, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, hasPortion: true },
-        { id: 'matar-aloo', name: 'Matar Aloo', desc: 'Peas & potato in light gravy', price: 20, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, hasPortion: true },
-        { id: 'mix-veg', name: 'Mix Veg', desc: 'Seasonal vegetables sauteed', price: 20, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, badge: 'Fresh', hasPortion: true },
-        { id: 'jeera-aloo', name: 'Jeera Aloo', desc: 'Cumin-tempered potatoes', price: 15, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, hasPortion: true },
-        { id: 'bhindi', name: 'Bhindi Masala', desc: 'Stir-fried okra with spices', price: 25, img: IMG('lunch_dinner_menu_display_1776969613500.png'), veg: true, hasPortion: true },
+        { id: 'aloo-fry', name: 'Aloo Fry', desc: 'Crispy stir-fried potatoes', price: 15, img: IMG('aloo-fry.webp', 'new-food'), veg: true, hasPortion: true },
+        { id: 'matar-aloo', name: 'Matar Aloo', desc: 'Peas & potato in light gravy', price: 20, img: IMG('matar-aloo.webp', 'new-food'), veg: true, hasPortion: true },
+        { id: 'mix-veg', name: 'Mix Veg', desc: 'Seasonal vegetables sauteed', price: 20, img: IMG('mix-veg.webp', 'new-food'), veg: true, badge: 'Fresh', hasPortion: true },
+        { id: 'jeera-aloo', name: 'Jeera Aloo', desc: 'Cumin-tempered potatoes', price: 15, img: IMG('jeera-aloo.webp', 'new-food'), veg: true, hasPortion: true },
+        { id: 'bhindi', name: 'Bhindi Masala', desc: 'Stir-fried okra with spices', price: 25, img: IMG('bhindi.webp', 'new-food'), veg: true, hasPortion: true },
       ]
     },
     {
       label: 'Dals',
       key: 'dal',
       items: [
-        { id: 'dal-fry', name: 'Dal Fry', desc: 'Yellow lentils tempered with garlic & cumin', price: 15, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: 'Classic', hasPortion: true },
-        { id: 'dal-makhani', name: 'Dal Makhani', desc: 'Slow-cooked black lentils with cream', price: 25, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: 'Popular', hasPortion: true },
-        { id: 'dal-tadka', name: 'Dal Tadka', desc: 'Arhar dal with red chilli tadka', price: 15, img: IMG('chhole_masala_1776971292524.png'), veg: true, hasPortion: true },
-        { id: 'rajma', name: 'Rajma', desc: 'Red kidney beans in thick gravy', price: 20, img: IMG('chhole_masala_1776971292524.png'), veg: true, badge: 'Hearty', hasPortion: true },
-        { id: 'panchmel', name: 'Panchmel Dal', desc: 'Traditional five-lentil mix', price: 20, img: IMG('chhole_masala_1776971292524.png'), veg: true, hasPortion: true },
+        { id: 'dal-fry', name: 'Dal Fry', desc: 'Yellow lentils tempered with garlic & cumin', price: 15, img: IMG('dal fry.webp', 'new-food'), veg: true, badge: 'Classic', hasPortion: true },
+        { id: 'dal-makhani', name: 'Dal Makhani', desc: 'Slow-cooked black lentils with cream', price: 25, img: IMG('dal-makhni.webp', 'new-food'), veg: true, badge: 'Popular', hasPortion: true },
+        { id: 'dal-tadka', name: 'Dal Tadka', desc: 'Arhar dal with red chilli tadka', price: 15, img: IMG('dal-tadka.webp', 'new-food'), veg: true, hasPortion: true },
+        { id: 'rajma', name: 'Rajma', desc: 'Red kidney beans in thick gravy', price: 20, img: IMG('rajma.webp', 'new-food'), veg: true, badge: 'Hearty', hasPortion: true },
+        { id: 'panchmel', name: 'Panchmel Dal', desc: 'Traditional five-lentil mix', price: 20, img: IMG('panchmel.webp', 'new-food'), veg: true, hasPortion: true },
       ]
     },
   ],
@@ -440,22 +440,22 @@ const MENU_CATALOGUE: Record<string, MenuSection[]> = {
       items: [
         { id: 'samosa', name: 'Samosa', desc: '2 crispy samosas with chutney', price: 20, img: IMG('samosa_plate_1776971310265.png'), veg: true, badge: 'Popular' },
         { id: 'kachori', name: 'Kachori', desc: '2 flaky kachoris with aloo sabzi', price: 25, img: IMG('kachori_snack_1776971332501.png'), veg: true },
-        { id: 'sandwich', name: 'Sandwich', desc: 'Toasted veg sandwich with green chutney', price: 35, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'patty', name: 'Patty (Puff)', desc: 'Crispy baked pastry puff', price: 20, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'veg-burger', name: 'Veg Burger', desc: 'Crispy patty with lettuce & sauce', price: 45, img: IMG('veg_burger_1776971347546.png'), veg: true, badge: 'New' },
+        { id: 'sandwich', name: 'Sandwich', desc: 'Toasted veg sandwich with green chutney', price: 35, img: IMG('sandwich.webp', 'new-food'), veg: true },
+        { id: 'patty', name: 'Patty (Puff)', desc: 'Crispy baked pastry puff', price: 20, img: IMG('patty.webp', 'new-food'), veg: true },
+        { id: 'veg-burger', name: 'Veg Burger', desc: 'Crispy patty with lettuce & sauce', price: 45, img: IMG('veg burger.webp', 'new-food'), veg: true, badge: 'New' },
       ]
     },
     {
       label: 'Beverage',
       key: 'beverage',
       items: [
-        { id: 'tea', name: 'Tea', desc: 'Hot masala chai', price: 10, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'coffee', name: 'Coffee', desc: 'Hot brewed coffee', price: 15, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'bournvita', name: 'Bournvita', desc: 'Hot chocolate health drink', price: 20, img: IMG('snacks_menu_display_1776969638095.png'), veg: true, badge: 'Health' },
-        { id: 'cold-coffee', name: 'Cold Coffee', desc: 'Chilled coffee with milk', price: 30, img: IMG('snacks_menu_display_1776969638095.png'), veg: true, badge: 'Cold' },
-        { id: 'shikanji', name: 'Shikanji', desc: 'Fresh lime soda with spices', price: 20, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'milkrose', name: 'Milkrose', desc: 'Chilled rose milk drink', price: 25, img: IMG('snacks_menu_display_1776969638095.png'), veg: true },
-        { id: 'shake', name: 'Shakes', desc: 'Seasonal flavoured milkshake', price: 40, img: IMG('snacks_menu_display_1776969638095.png'), veg: true, badge: 'Popular' },
+        { id: 'tea', name: 'Tea', desc: 'Hot masala chai', price: 10, img: IMG('tea.webp', 'new-food'), veg: true },
+        { id: 'coffee', name: 'Coffee', desc: 'Hot brewed coffee', price: 15, img: IMG('coffee.webp', 'new-food'), veg: true },
+        { id: 'bournvita', name: 'Bournvita', desc: 'Hot chocolate health drink', price: 20, img: IMG('bournvita.webp', 'new-food'), veg: true, badge: 'Health' },
+        { id: 'cold-coffee', name: 'Cold Coffee', desc: 'Chilled coffee with milk', price: 30, img: IMG('cold-coffee.webp', 'new-food'), veg: true, badge: 'Cold' },
+        { id: 'shikanji', name: 'Shikanji', desc: 'Fresh lime soda with spices', price: 20, img: IMG('shikanji.webp', 'new-food'), veg: true },
+        { id: 'milkrose', name: 'Milkrose', desc: 'Chilled rose milk drink', price: 25, img: IMG('milk-rose.webp', 'new-food'), veg: true },
+        { id: 'shake', name: 'Shakes', desc: 'Seasonal flavoured milkshake', price: 40, img: IMG('shake.webp', 'new-food'), veg: true, badge: 'Popular' },
       ]
     }
   ],
