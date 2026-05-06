@@ -510,8 +510,12 @@ function getGreeting() {
 
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem(TOKEN_KEY))
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [rollNo, setRollNo] = useState('')
   const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [hostel, setHostel] = useState('')
+  const [department, setDepartment] = useState('')
   const [student, setStudent] = useState<StudentMe | null>(null)
   const [orders, setOrders] = useState<OrderItem[]>([])
   const [availability, setAvailability] = useState<AvailabilityOption[]>([])
@@ -605,6 +609,32 @@ export default function App() {
       localStorage.setItem(TOKEN_KEY, accessToken)
       setToken(accessToken)
       addToast('Logged in successfully!', 'success')
+    } catch (err: any) {
+      addToast(err.message, 'error')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault()
+    setIsLoading(true)
+    try {
+      const res = await apiRequest<{ accessToken?: string; token?: string }>('/auth/student/register', {
+        method: 'POST',
+        body: {
+          rollNo,
+          password,
+          fullName,
+          hostel,
+          department,
+        },
+      })
+      const accessToken = res.accessToken ?? res.token
+      if (!accessToken) throw new Error('Invalid response from server')
+      localStorage.setItem(TOKEN_KEY, accessToken)
+      setToken(accessToken)
+      addToast('Registration completed successfully!', 'success')
     } catch (err: any) {
       addToast(err.message, 'error')
     } finally {
@@ -735,9 +765,49 @@ export default function App() {
         <div className="auth-glow" />
         <div className="auth-card">
           <p className="auth-eyebrow">Optimess Platform</p>
-          <h1>Welcome Back</h1>
-          <p className="auth-subtitle">Log in to manage your daily meals and wallet.</p>
-          <form onSubmit={handleLogin} className="auth-form">
+          <h1>{authMode === 'login' ? 'Welcome Back' : 'Student Registration'}</h1>
+          <p className="auth-subtitle">
+            {authMode === 'login'
+              ? 'Log in to manage your daily meals and wallet.'
+              : 'Create your account first, then complete the Jain or Not Jain setup on first login.'}
+          </p>
+
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '24px' }}>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => setAuthMode('login')}
+              style={{ flex: 1, opacity: authMode === 'login' ? 1 : 0.72 }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              className="outline-button"
+              onClick={() => setAuthMode('register')}
+              style={{ flex: 1, opacity: authMode === 'register' ? 1 : 0.72 }}
+            >
+              Register
+            </button>
+          </div>
+
+          <form onSubmit={authMode === 'login' ? handleLogin : handleRegister} className="auth-form">
+            {authMode === 'register' && (
+              <>
+                <label className="field-group">
+                  <span>Full Name</span>
+                  <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Student name" required />
+                </label>
+                <label className="field-group">
+                  <span>Hostel</span>
+                  <input type="text" value={hostel} onChange={e => setHostel(e.target.value)} placeholder="Hostel name" required />
+                </label>
+                <label className="field-group">
+                  <span>Department</span>
+                  <input type="text" value={department} onChange={e => setDepartment(e.target.value)} placeholder="Department" required />
+                </label>
+              </>
+            )}
             <label className="field-group">
               <span>Roll Number</span>
               <input type="text" value={rollNo} onChange={e => setRollNo(e.target.value)} placeholder="e.g. 23BCE1234" required />
@@ -747,7 +817,7 @@ export default function App() {
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
             </label>
             <button type="submit" className="primary-button" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? (authMode === 'login' ? 'Signing in...' : 'Creating account...') : authMode === 'login' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
         </div>
